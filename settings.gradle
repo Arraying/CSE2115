@@ -1,0 +1,5 @@
+rootProject.name = 'sem'
+include 'microservice1'
+include 'microservice2'
+include 'microservice3'
+include 'microservice4'

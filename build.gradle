@@ -1,0 +1,96 @@
+plugins {
+    // We need these plugins for the subprojects.
+    id 'info.solidsoft.pitest' version '1.5.2' apply false // Testing.
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE' apply false // Dependency manager.
+    id 'org.springframework.boot' version '2.3.5.RELEASE' apply false // Spring Boot.
+}
+
+subprojects {
+    // Manually specify the plugins to use for the subprojects.
+    apply plugin: 'application'
+    apply plugin: 'checkstyle'
+    apply plugin: 'info.solidsoft.pitest'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'java'
+    apply plugin: 'jacoco'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'pmd'
+
+    // Globally define the metadata and Java versions.
+    group = 'nl.tudelft.sem'
+    version = '0.1.0-SNAPSHOT'
+    sourceCompatibility = 14
+    targetCompatibility = 14
+
+    // Use Maven Central to pull all the dependencies.
+    repositories {
+        mavenCentral()
+    }
+
+    // Make sure to include all of the code's dependencies.
+    dependencies {
+        // Spring.
+        implementation 'org.springframework.boot:spring-boot-starter'
+        testImplementation('org.springframework.boot:spring-boot-starter-test') {
+            exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+        }
+        // Testing.
+        testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
+        testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.1.0'
+        testImplementation('org.assertj:assertj-core:3.14.0')
+    }
+
+    // Global test configuration.
+    test {
+        useJUnitPlatform()
+        // Specific JaCoCo configuration (may need to tweak excludes at some point).
+        jacoco {
+            enabled = true
+            includes = ['nl.tudelft.sem.*']
+            excludes = []
+        }
+    }
+
+    // PITest configuration.
+    pitest {
+        junit5PluginVersion = '0.12'
+        // noinspection all
+        targetClasses = ['nl.tudelft.sem.*']
+        pitestVersion = '1.5.1'
+        // noinspection all
+        threads = 4
+        // noinspection all
+        outputFormats = ['XML', 'HTML']
+        // noinspection all
+        timestampedReports = false
+    }
+
+    // More specific JaCoCo configuration.
+    jacocoTestCoverageVerification() {
+        // Ensure this works after testing.
+        dependsOn test
+        violationRules {
+            rule {
+                enabled = true
+                element = 'CLASS'
+                includes = ['nl.tudelft.sem.*']
+                limit {
+                    counter = 'BRANCH'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.1
+                }
+            }
+        }
+    }
+
+    // PMD configuration.
+    pmd {
+        incrementalAnalysis = true
+    }
+
+    // Ensures our code is beautiful (it won't be).
+    checkstyle {
+        toolVersion "8.37"
+        configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    }
+ }
